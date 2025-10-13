@@ -8,8 +8,6 @@ jobs:
   run-tests:
     name: Test (py${{ matrix.python-version }} • ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -32,8 +30,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -U pytest pytest-cov
+          pip install -U pytest
 
+      # Makes new data Base
       - name: Initialize fresh test database
         run: >
           python -c "import os;
@@ -43,26 +42,5 @@ jobs:
           getattr(database, 'init_database', lambda: None)();
           print('Initialized', p)"
 
-      - name: Run tests with coverage (and JUnit)
-        run: |
-          python -m pytest -q tests \
-            --cov=. --cov-report=term --cov-report=xml:coverage.xml \
-            --junitxml=junit.xml -o junit_family=legacy
-
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          flags: ${{ matrix.os }},py${{ matrix.python-version }}
-          name: ${{ matrix.os }}-py${{ matrix.python-version }}
-          fail_ci_if_error: true
-          verbose: true
-
-      - name: Upload test results to Codecov
-        if: matrix.os == 'ubuntu-latest'
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./junit.xml
+      - name: Run tests in tests/
+        run: python -m pytest -q tests
