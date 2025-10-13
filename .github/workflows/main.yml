@@ -30,9 +30,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -U pytest
+          pip install -U pytest pytest-cov
 
-      # Makes new data Base
+      # Makes new database
       - name: Initialize fresh test database
         run: >
           python -c "import os;
@@ -42,5 +42,16 @@ jobs:
           getattr(database, 'init_database', lambda: None)();
           print('Initialized', p)"
 
-      - name: Run tests in tests/
-        run: python -m pytest -q tests
+      - name: Run tests with coverage
+        run: |
+          python -m pytest -q tests --cov=. --cov-report=term --cov-report=xml:coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: ${{ matrix.os }},py${{ matrix.python-version }}
+          name: ${{ matrix.os }}-py${{ matrix.python-version }}
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }} # keep for private; optional for public
