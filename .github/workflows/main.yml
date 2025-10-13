@@ -8,6 +8,8 @@ jobs:
   run-tests:
     name: Test (py${{ matrix.python-version }} • ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read      # required by codecov-action v4
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +34,6 @@ jobs:
           pip install -r requirements.txt
           pip install -U pytest pytest-cov
 
-      # Makes new database
       - name: Initialize fresh test database
         run: >
           python -c "import os;
@@ -47,11 +48,12 @@ jobs:
           python -m pytest -q tests --cov=. --cov-report=term --cov-report=xml:coverage.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v4   # v4 is stable
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}   # required for your setup
           files: ./coverage.xml
           flags: ${{ matrix.os }},py${{ matrix.python-version }}
           name: ${{ matrix.os }}-py${{ matrix.python-version }}
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }} # keep for private; optional for public
+
