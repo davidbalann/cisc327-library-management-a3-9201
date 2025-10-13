@@ -1,4 +1,6 @@
 # Library Management System - Flask Web Application with SQLite
+[![Tests](https://img.shields.io/github/actions/workflow/status/davidbalann/cisc327-library-management-a2-9201/.github/workflows/main.yml?branch=main&label=Tests)](https://github.com/davidbalann/cisc327-library-management-a2-9201/blob/main/.github/workflows/main.yml)
+[![codecov](https://img.shields.io/codecov/c/github/<USER>/<REPO>?branch=main&label=codecov)](https://app.codecov.io/gh/<USER>/<REPO>/branch/main)
 
 ## Overview
 
