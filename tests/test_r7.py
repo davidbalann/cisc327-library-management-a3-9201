@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from library_service import get_patron_status_report  # noqa: E402
+from services.library_service import get_patron_status_report  # noqa: E402
 
 
 def _patch_history(monkeypatch, rows):

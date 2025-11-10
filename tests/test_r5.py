@@ -7,7 +7,7 @@ import pytest
 # Import from project root
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from library_service import calculate_late_fee_for_book
+from services.library_service import calculate_late_fee_for_book
 
 
 def _patch_book_exists(monkeypatch, book_id=1, title="Any Book"):

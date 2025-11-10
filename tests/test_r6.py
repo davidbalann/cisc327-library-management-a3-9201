@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
-from library_service import search_books_in_catalog
+from services.library_service import search_books_in_catalog
 
 
 def _patch_catalog(monkeypatch, books):

@@ -7,7 +7,7 @@ import string
 # Allow importing library_service & database from parent dir
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from library_service import add_book_to_catalog
+from services.library_service import add_book_to_catalog
 from database import get_book_by_isbn, insert_book  # used for setup/verification
 
 # --- helpers ---------------------------------------------------------------

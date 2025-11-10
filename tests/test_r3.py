@@ -4,11 +4,8 @@ import os
 # Add the parent directory of tests to the sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from datetime import datetime, timedelta
-import re
 import pytest
-from app import create_app
-from library_service import (
+from services.library_service import (
     borrow_book_by_patron,)
 
 
