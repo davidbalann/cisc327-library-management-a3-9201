@@ -9,7 +9,7 @@ from services.library_service import search_books_in_catalog
 
 def _patch_catalog(monkeypatch, books):
     """Monkeypatch the service to return a controlled catalog."""
-    monkeypatch.setattr("library_service.get_all_books", lambda: books)
+    monkeypatch.setattr("services.library_service.get_all_books", lambda: books)
 
 
 def test_search_by_title_partial_case_insensitive(monkeypatch):

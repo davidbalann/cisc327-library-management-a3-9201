@@ -11,13 +11,13 @@ from services.library_service import return_book_by_patron
 
 def test_return_book_valid_input(monkeypatch):
     # Book exists
-    monkeypatch.setattr("library_service.get_book_by_id",
+    monkeypatch.setattr("services.library_service.get_book_by_id",
                         lambda book_id: {"id": book_id, "title": "Book X", "available_copies": 2, "total_copies": 5})
 
     # Patron has an active borrow of this book
     borrow_date = datetime.now() - timedelta(days=10)
     due_date = borrow_date + timedelta(days=14)
-    monkeypatch.setattr("library_service.get_patron_borrowed_books",
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books",
                         lambda patron_id: [{
                             "book_id": 1,
                             "title": "Book X",
@@ -28,11 +28,11 @@ def test_return_book_valid_input(monkeypatch):
                         }])
 
     # DB updates succeed
-    monkeypatch.setattr("library_service.update_borrow_record_return_date", lambda *args, **kwargs: True)
-    monkeypatch.setattr("library_service.update_book_availability", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_borrow_record_return_date", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_book_availability", lambda *args, **kwargs: True)
 
     # Fee calculation reports none
-    monkeypatch.setattr("library_service.calculate_late_fee_for_book",
+    monkeypatch.setattr("services.library_service.calculate_late_fee_for_book",
                         lambda patron_id, book_id: {"fee_amount": 0.00, "days_overdue": 0})
 
     success, message = return_book_by_patron("123456", 1)
@@ -44,13 +44,13 @@ def test_return_book_valid_input(monkeypatch):
 def test_return_book_updates_late_fee(monkeypatch):
     """Overdue return should mention fee and days overdue."""
     # Book exists
-    monkeypatch.setattr("library_service.get_book_by_id",
+    monkeypatch.setattr("services.library_service.get_book_by_id",
                         lambda book_id: {"id": book_id, "title": "Book Y", "available_copies": 0, "total_copies": 1})
 
     # Patron has active overdue borrow
     borrow_date = datetime.now() - timedelta(days=30)
     due_date = borrow_date + timedelta(days=14)
-    monkeypatch.setattr("library_service.get_patron_borrowed_books",
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books",
                         lambda patron_id: [{
                             "book_id": 2,
                             "title": "Book Y",
@@ -61,11 +61,11 @@ def test_return_book_updates_late_fee(monkeypatch):
                         }])
 
     # DB updates succeed
-    monkeypatch.setattr("library_service.update_borrow_record_return_date", lambda *args, **kwargs: True)
-    monkeypatch.setattr("library_service.update_book_availability", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_borrow_record_return_date", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_book_availability", lambda *args, **kwargs: True)
 
     # Fee calculation returns a non-zero fee (e.g., 7.50 for 11 days overdue)
-    monkeypatch.setattr("library_service.calculate_late_fee_for_book",
+    monkeypatch.setattr("services.library_service.calculate_late_fee_for_book",
                         lambda patron_id, book_id: {"fee_amount": 7.50, "days_overdue": 11})
 
     success, message = return_book_by_patron("123456", 2)
@@ -84,11 +84,11 @@ def test_return_book_invalid_patron_id():
 def test_return_book_not_borrowed(monkeypatch):
     """If the patron doesn’t have an active borrow for that book, return should fail."""
     # Book exists
-    monkeypatch.setattr("library_service.get_book_by_id",
+    monkeypatch.setattr("services.library_service.get_book_by_id",
                         lambda book_id: {"id": book_id, "title": "Book Z", "available_copies": 1, "total_copies": 3})
 
     # Patron has no active borrows of this book
-    monkeypatch.setattr("library_service.get_patron_borrowed_books", lambda patron_id: [])
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books", lambda patron_id: [])
 
     success, message = return_book_by_patron("123456", 3)
     assert success is False

@@ -13,7 +13,7 @@ from services.library_service import calculate_late_fee_for_book
 def _patch_book_exists(monkeypatch, book_id=1, title="Any Book"):
     """Ensure calculate_late_fee_for_book sees a real book."""
     monkeypatch.setattr(
-        "library_service.get_book_by_id",
+        "services.library_service.get_book_by_id",
         lambda bid: {"id": bid, "title": title, "available_copies": 1, "total_copies": 1} if bid == book_id else None
     )
 
@@ -27,7 +27,7 @@ def test_no_overdue_book(monkeypatch):
 
     # Active (unreturned) borrow list
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda patron_id: [{
             "book_id": 1,
             "title": "Fresh Loan",
@@ -52,7 +52,7 @@ def test_overdue_within_7_days(monkeypatch):
     due_date = datetime.now() - timedelta(days=5)
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda patron_id: [{
             "book_id": 2,
             "title": "Seven Window",
@@ -76,7 +76,7 @@ def test_book_already_returned(monkeypatch):
     """
     _patch_book_exists(monkeypatch, book_id=5, title="Returned One")
 
-    monkeypatch.setattr("library_service.get_patron_borrowed_books", lambda patron_id: [])
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books", lambda patron_id: [])
 
     result = calculate_late_fee_for_book("012345", 5)
     assert result["fee_amount"] == 0.00
@@ -92,7 +92,7 @@ def test_overdue_more_than_7_days(monkeypatch):
     due_date = datetime.now() - timedelta(days=10)
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda patron_id: [{
             "book_id": 3,
             "title": "Ten Late",
@@ -117,7 +117,7 @@ def test_overdue_fee_capped(monkeypatch):
     due_date = datetime.now() - timedelta(days=40)  # explicitly 40 days overdue
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda patron_id: [{
             "book_id": 4,
             "title": "Very Late",
@@ -148,7 +148,7 @@ def test_fee_exactly_seven_days_overdue(monkeypatch):
     due_date = borrow_date + timedelta(days=14)
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda patron_id: [{
             "book_id": 6,
             "title": "Boundary Book",

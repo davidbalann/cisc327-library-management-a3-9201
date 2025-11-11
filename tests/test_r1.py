@@ -1,29 +1,68 @@
+# tests/test_library_service_monkeypatched.py
 import pytest
 import sys
 import os
 import random
 import string
 
-# Allow importing library_service & database from parent dir
+# allow importing services from parent dir
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import services.library_service as libsvc
 from services.library_service import add_book_to_catalog
-from database import get_book_by_isbn, insert_book  # used for setup/verification
 
 # --- helpers ---------------------------------------------------------------
 
 def unique_isbn():
     """Generate a 13-digit numeric ISBN not present in DB (best-effort)."""
-    # Try a few times to avoid rare collisions
-    for _ in range(10):
-        isbn = ''.join(random.choice(string.digits) for _ in range(13))
-        if get_book_by_isbn(isbn) is None:
+    # Use the service's get_book_by_isbn (which will be monkeypatched)
+    for _ in range(100):
+        isbn = f"{random.randint(0, 10**13 - 1):013d}"
+        if libsvc.get_book_by_isbn(isbn) is None:
             return isbn
-    # Fallback: still return a 13-digit string; last resort may collide
-    return ''.join(random.choice(string.digits) for _ in range(13))
+    # fallback (very unlikely)
+    return f"{random.randint(0, 10**13 - 1):013d}"
 
 # ------------------------
-# R1: six integration tests
+# Global monkeypatch fixture (single place to mock DB)
+# ------------------------
+@pytest.fixture(autouse=True)
+def mock_db(monkeypatch):
+    """
+    Autouse fixture that replaces libsvc.get_book_by_isbn and libsvc.insert_book
+    with in-memory stubs backed by a simple dict. This gives deterministic,
+    isolated behavior for all tests while preserving DB-like semantics
+    (insertion, duplicate-check, retrieval).
+    """
+    storage = {}
+
+    def get_book_by_isbn_stub(isbn):
+        # Return a dict-like row or None
+        return storage.get(isbn)
+
+    def insert_book_stub(title, author, isbn, total_copies, available_copies):
+        # Return False if duplicate, True on success
+        if isbn in storage:
+            return False
+        storage[isbn] = {
+            "title": title,
+            "author": author,
+            "isbn": isbn,
+            "total_copies": total_copies,
+            "available_copies": available_copies,
+        }
+        return True
+
+    # Patch the functions on the module where add_book_to_catalog will call them
+    monkeypatch.setattr(libsvc, "get_book_by_isbn", get_book_by_isbn_stub)
+    monkeypatch.setattr(libsvc, "insert_book", insert_book_stub)
+
+    yield
+    # teardown: clear storage (not strictly necessary due to fixture scope)
+    storage.clear()
+
+# ------------------------
+# Tests (kept structure & intent)
 # ------------------------
 
 def test_add_book_valid_input():
@@ -33,7 +72,7 @@ def test_add_book_valid_input():
     assert success is True
     assert "successfully added" in message.lower()
 
-    row = get_book_by_isbn(isbn)
+    row = libsvc.get_book_by_isbn(isbn)
     assert row is not None
 
 
@@ -44,6 +83,7 @@ def test_add_book_missing_title():
     assert success is False
     assert "title is required" in message.lower()
 
+
 def test_add_book_author_required():
     """Author is required."""
     isbn = unique_isbn()
@@ -51,11 +91,13 @@ def test_add_book_author_required():
     assert success is False
     assert "author is required" in message.lower()
 
+
 def test_add_book_invalid_isbn_length():
     """ISBN must be exactly 13 digits (implementation checks length)."""
     success, message = add_book_to_catalog("T", "A", "123456789", 1)
     assert success is False
-    assert "exactly 13" in message
+    assert "exactly 13" in message.lower()
+
 
 def test_add_book_invalid_total_copies_nonpositive():
     """Total copies must be a positive integer (zero should fail)."""
@@ -64,15 +106,17 @@ def test_add_book_invalid_total_copies_nonpositive():
     assert success is False
     assert "positive integer" in message.lower()
 
+
 def test_add_book_duplicate_isbn():
     """Duplicate ISBN must be rejected. Set up real row first, then call service."""
     isbn = unique_isbn()
-    ok = insert_book("Seed Title", "Seed Author", isbn, 1, 1)
+    ok = libsvc.insert_book("Seed Title", "Seed Author", isbn, 1, 1)
     assert ok is True
 
     success, message = add_book_to_catalog("New Title", "New Author", isbn, 2)
     assert success is False
     assert "already exists" in message.lower()
+
 
 def test_add_book_title_too_long():
     """Title > 200 chars should be rejected."""
@@ -90,4 +134,3 @@ def test_add_book_author_too_long():
     success, message = add_book_to_catalog("Some Title", long_author, isbn, 1)
     assert success is False
     assert "less than 100" in message.lower()
-

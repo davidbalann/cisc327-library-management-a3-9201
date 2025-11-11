@@ -20,11 +20,11 @@ def _patch_history(monkeypatch, rows):
     """
     cursor = SimpleNamespace(fetchall=lambda: rows)
     conn = SimpleNamespace(execute=lambda *a, **k: cursor, close=lambda: None)
-    monkeypatch.setattr("library_service.get_db_connection", lambda: conn)
+    monkeypatch.setattr("services.library_service.get_db_connection", lambda: conn)
 
 
 def test_status_no_history(monkeypatch):
-    monkeypatch.setattr("library_service.get_patron_borrowed_books", lambda _pid: [])
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books", lambda _pid: [])
     _patch_history(monkeypatch, rows=[])
 
     report = get_patron_status_report("123456")
@@ -42,7 +42,7 @@ def test_status_active_loans_only(monkeypatch):
 
     # One active loan, not overdue
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda _pid: [{
             "book_id": 101,
             "title": "The Great Gatsby",
@@ -76,7 +76,7 @@ def test_status_overdue_generates_fees(monkeypatch):
     due_date = datetime.now() - timedelta(days=16)
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda _pid: [{
             "book_id": 202,
             "title": "Moby Dick",
@@ -122,7 +122,7 @@ def test_status_mixed_active_and_returned(monkeypatch):
         "return_date": (datetime.now() - timedelta(days=5)).isoformat(),
     }
 
-    monkeypatch.setattr("library_service.get_patron_borrowed_books", lambda _pid: [active_borrow])
+    monkeypatch.setattr("services.library_service.get_patron_borrowed_books", lambda _pid: [active_borrow])
     _patch_history(monkeypatch, rows=[
         {
             "book_id": active_borrow["book_id"],
@@ -150,7 +150,7 @@ def test_status_fee_cap(monkeypatch):
     due_date = datetime.now() - timedelta(days=46)
 
     monkeypatch.setattr(
-        "library_service.get_patron_borrowed_books",
+        "services.library_service.get_patron_borrowed_books",
         lambda _pid: [{
             "book_id": 505,
             "title": "Epic Novel",

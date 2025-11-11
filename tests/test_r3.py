@@ -12,10 +12,10 @@ from services.library_service import (
 #tests for R3
 def test_borrow_book_valid_input(monkeypatch):
 
-    monkeypatch.setattr("library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 2})
-    monkeypatch.setattr("library_service.get_patron_borrow_count", lambda patron_id: 2)
-    monkeypatch.setattr("library_service.insert_borrow_record", lambda *args, **kwargs: True)
-    monkeypatch.setattr("library_service.update_book_availability", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 2})
+    monkeypatch.setattr("services.library_service.get_patron_borrow_count", lambda patron_id: 2)
+    monkeypatch.setattr("services.library_service.insert_borrow_record", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_book_availability", lambda *args, **kwargs: True)
 
     success, message = borrow_book_by_patron("123456", 1)
 
@@ -32,7 +32,7 @@ def test_borrow_book_invalid_patron_id():
 
 
 def test_borrow_book_not_found(monkeypatch):
-    monkeypatch.setattr("library_service.get_book_by_id", lambda book_id: None)
+    monkeypatch.setattr("services.library_service.get_book_by_id", lambda book_id: None)
 
     success, message = borrow_book_by_patron("123456", 99)
 
@@ -42,7 +42,7 @@ def test_borrow_book_not_found(monkeypatch):
 
 def test_borrow_book_not_available(monkeypatch):
 
-    monkeypatch.setattr("library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 0})
+    monkeypatch.setattr("services.library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 0})
 
     success, message = borrow_book_by_patron("111222", 1)
 
@@ -52,8 +52,8 @@ def test_borrow_book_not_available(monkeypatch):
 
 def test_borrow_book_patron_limit(monkeypatch):
 
-    monkeypatch.setattr("library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 2})
-    monkeypatch.setattr("library_service.get_patron_borrow_count", lambda patron_id: 6)
+    monkeypatch.setattr("services.library_service.get_book_by_id", lambda book_id: {"id": book_id, "title": "Book", "available_copies": 2})
+    monkeypatch.setattr("services.library_service.get_patron_borrow_count", lambda patron_id: 6)
 
     success, message = borrow_book_by_patron("111222", 1)
 
@@ -62,12 +62,12 @@ def test_borrow_book_patron_limit(monkeypatch):
 
 def test_borrow_book_fails_when_insert_record_errors(monkeypatch):
     """If inserting the borrow record fails, return an error and do not claim success."""
-    monkeypatch.setattr("library_service.get_book_by_id",
+    monkeypatch.setattr("services.library_service.get_book_by_id",
                         lambda book_id: {"id": book_id, "title": "DB Error Book", "available_copies": 1})
-    monkeypatch.setattr("library_service.get_patron_borrow_count", lambda patron_id: 1)
-    monkeypatch.setattr("library_service.insert_borrow_record", lambda *args, **kwargs: False)
+    monkeypatch.setattr("services.library_service.get_patron_borrow_count", lambda patron_id: 1)
+    monkeypatch.setattr("services.library_service.insert_borrow_record", lambda *args, **kwargs: False)
     # Even if called, make it harmless
-    monkeypatch.setattr("library_service.update_book_availability", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_book_availability", lambda *args, **kwargs: True)
 
     success, message = borrow_book_by_patron("123456", 1)
 
@@ -77,11 +77,11 @@ def test_borrow_book_fails_when_insert_record_errors(monkeypatch):
 
 def test_borrow_book_fails_when_availability_update_errors(monkeypatch):
     """If availability update fails after insert, return an error."""
-    monkeypatch.setattr("library_service.get_book_by_id",
+    monkeypatch.setattr("services.library_service.get_book_by_id",
                         lambda book_id: {"id": book_id, "title": "Post-Insert Fail", "available_copies": 2})
-    monkeypatch.setattr("library_service.get_patron_borrow_count", lambda patron_id: 0)
-    monkeypatch.setattr("library_service.insert_borrow_record", lambda *args, **kwargs: True)
-    monkeypatch.setattr("library_service.update_book_availability", lambda *args, **kwargs: False)
+    monkeypatch.setattr("services.library_service.get_patron_borrow_count", lambda patron_id: 0)
+    monkeypatch.setattr("services.library_service.insert_borrow_record", lambda *args, **kwargs: True)
+    monkeypatch.setattr("services.library_service.update_book_availability", lambda *args, **kwargs: False)
 
     success, message = borrow_book_by_patron("123456", 42)
 
