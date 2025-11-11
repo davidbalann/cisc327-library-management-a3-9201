@@ -43,16 +43,21 @@ jobs:
           print('Initialized', p)"
 
       - name: Run tests in tests/
-        run: python -m pytest -q tests
+        run: python -m pytest -q tests --junitxml=junit.xml --cov=. --cov-report=xml
 
       - name: Upload Coverage Reports To Codecov
+        if: ${{ always() }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: false
 
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./junit.xml
+        continue-on-error: true
 
