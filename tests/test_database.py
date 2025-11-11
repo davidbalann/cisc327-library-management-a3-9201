@@ -12,11 +12,6 @@ import database as db
 
 @pytest.fixture()
 def temp_db(monkeypatch, tmp_path):
-    """
-    Use a temporary SQLite file for each test. Patch db.DATABASE to point to it,
-    then initialize schema with init_database(). Ensures isolation and persistence
-    across separate connections opened by module functions.
-    """
     temp_path = tmp_path / "test_library.db"
     monkeypatch.setattr(db, "DATABASE", str(temp_path))
     db.init_database()

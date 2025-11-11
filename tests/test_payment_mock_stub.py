@@ -3,7 +3,6 @@ import sys
 import pytest
 from unittest.mock import Mock
 
-# Ensure project root on sys.path when running `pytest tests/`
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from services.library_service import (
@@ -13,11 +12,6 @@ from services.library_service import (
 from services.payment_service import PaymentGateway
 
 
-# This test module demonstrates both Stubs and Mocks.
-# - Stubs (mocker.patch): Stub calculate_late_fee_for_book() and get_book_by_id()
-#   to provide canned data only (no call verification).
-# - Mocks (Mock(spec=PaymentGateway)): Mock external gateway and VERIFY calls
-#   with assert_called_once(), assert_called_with(), and assert_not_called().
 
 
 # ---------------- pay_late_fees() ----------------

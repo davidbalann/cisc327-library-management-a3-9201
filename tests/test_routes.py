@@ -1,13 +1,3 @@
-"""
-Route coverage tests for all blueprints in routes/.
-
-Covers:
-- borrowing_routes: POST /borrow invalid id + success flow
-- borrowing_routes: GET/POST /return invalid id + success and error flows
-- search_routes: GET /search with/without q + flash behavior
-- api_routes: /api/search validation and results, /api/late_fee status code logic
-"""
-
 import os
 import sys
 import json
